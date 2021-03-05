@@ -7,14 +7,52 @@
 
 (comment
 
-;What are we looking at? Overview of Cursive in Intellij
+
+
+
+
+
+
+;Clojure core philosophy:
+;=================================================================================================
+;Lisp: almost no syntax, extensible
+;Functional programming: immutable data, first class functions
+;State management: mutation 'primitives' with state change semantics
+;Concurrency: the previous 2 idioms means concurrency just 'works'
+;Dynamic typing: emphasis on 'data oriented programming', not on types
+;Hosted: leverage the power of the Jvm and all of the existing libraries from Java (same story with cljs / javascript)
+;Practical over theoretical: This isn't Haskell.
+;Non-OO:
+; -"It is better to have 100 functions operate on one data structure
+;   than 10 functions on 10 data structures." —Alan Perlis
+; -Inheritance is not the only way to do polymorphism
+
+
+
+
+
+
+
+;What are we looking at? Cursive in Intellij
 ;-project structure
 ;-sending 'forms' from the editor to the running REPL
 
 
 
 
-;Lets evaluate some literal items
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ;Basic 'scalar' types
 ;=================================================================================================
@@ -28,23 +66,25 @@ false
 31r3T                                                       ;up to base 36
 -2.34
 123e-12
-98374598734958734985739485897987234587923459872631405892374508979348754N
+12398374598734958734985739485897987234587923459872631405892374508979348754N
 8979879837495873458937459873495873459873452394874958734.85793483974593945873945384578754M
 44/14
 "foo"
 \b
 \u2615
+
 :some-keyword
 :some-other-namespace/keyword
 ::my-namespaced-keyword
 'foo
+
 
 ;the 4 basic 'core' collection types (having a literal syntax, there are others without):
 ;=================================================================================================
 '(1 2 3 4 "five")                                           ;list
 ["foo" \b '(44/14)]                                         ;vector
 {:key "val" 1 'foo}                                         ;map
-#{123 "foo" 0x7B}                                           ;set (note the # symbol on the lhs)
+#{123 "foo" 0x7C}                                           ;set (note the # symbol on the lhs)
 
 ;persistent data structures - immutability without copy-on-write
 ;https://pivovarit.github.io/talks/purely-functional-data-structures/img/clojure-trees.png
@@ -98,7 +138,7 @@ false
   "(or 1 2)"
   read-string                                               ;In lisps, code is data
   macroexpand
-  eval
+  ;eval
   )
 
 
@@ -106,21 +146,6 @@ false
 
 
 
-
-
-;Clojure core philosophy:
-;=================================================================================================
-;Lisp: almost no syntax, extensible
-;Functional programming: immutable data, first class functions
-;State management: mutation 'primitives' with state change semantics
-;Concurrency: the previous 2 idioms means concurrency just 'works'
-;Dynamic typing: emphasis on 'data oriented programming', not on types
-;Hosted: leverage the power of the Jvm and all of the existing libraries from Java (same story with cljs / javascript)
-;Practical over theoretical: This isn't Haskell.
-;Non-OO:
-; -"It is better to have 100 functions operate on one data structure
-;   than 10 functions on 10 data structures." —Alan Perlis
-; -Inheritance is not the only way to do polymorphism
 
 
 ;Special forms
@@ -132,8 +157,8 @@ false
 
 (if (= foo 1) "foo" "bar")                                  ;if then else
 (do (println foo) (println "bar"))                          ;usually for side effects
-(loop [foo 2] foo)                                          ;like let, but with additional recur target capability
-(recur)                                                     ;non-stack consuming recursion (tco) - compiler enforced tail position
+(loop [foo 2] foo)                                          ;like let, but with recur target capability
+(recur)                                                     ;non-stack consuming recursion (tco) - compiler enforced
 (quote (+ 1 2))                                             ;don't evaluate the form
 (var foo)                                                   ;get the var of a symbol itself, not it's value
 
@@ -194,7 +219,7 @@ false
   (partial + n))
 
 (adder 2)
-((adder 2) 3)
+((adder 2) 3 4)
 (adder)                                                     ;what happens here?
 
 (defn adder                                                 ;multi-arity functions
@@ -227,6 +252,10 @@ configs
   (println (str "password=" pwd))
   (println (str "timeout=" timeout))
   (println (str "something=" something)))
+
+
+
+;20210305 - bookmark
 
 
 ;Macros
