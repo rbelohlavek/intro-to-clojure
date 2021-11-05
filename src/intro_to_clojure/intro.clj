@@ -20,11 +20,13 @@
   ;State management: mutation 'primitives' with state change semantics
   ;Concurrency: the previous 2 idioms means concurrency just 'works'
   ;Dynamic typing: emphasis on 'data oriented programming', not on types
-  ;Hosted: leverage the power of the Jvm and all of the existing libraries from Java (same story with cljs / javascript)
-  ;Practical over theoretical: This isn't Haskell.
+  ;Hosted: leverage the power of the Jvm and all the existing libraries from Java
+  ;        (same story with cljs / javascript)
+  ;Practical over pure: This isn't Haskell.
   ;Non-OO:
   ; -"It is better to have 100 functions operate on one data structure
   ;   than 10 functions on 10 data structures." —Alan Perlis
+  ; -Separation of data from behavior
   ; -Inheritance is not the only way to do polymorphism
 
 
@@ -54,29 +56,53 @@
 
 
 
+
+
+
   ;Basic 'scalar' types
   ;=================================================================================================
   nil
+
   true
   false
+
   123
   07021
   0xfa8d
   2r01101101
   31r3T                                                     ;up to base 36
+
   -2.34
   123e-12
+
   12398374598734958734985739485897987234587923459872631405892374508979348754N
+  (+ 9223372036854775807 1)
+
   8979879837495873458937459873495873459873452394874958734.85793483974593945873945384578754M
+
   44/14
+
   "foo"
+
   \b
   \u2615
 
   :some-keyword
   :some-other-namespace/keyword
   ::my-namespaced-keyword
+
   'foo
+
+
+
+
+
+
+
+
+
+
+
 
 
   ;the 4 basic 'core' collection types (having a literal syntax, there are others without):
@@ -84,10 +110,33 @@
   '(1 2 3 4 "five")                                         ;list
   ["foo" \b '(44/14)]                                       ;vector
   {:key "val" 1 'foo}                                       ;map
-  #{123 "foo" 0x7C}                                         ;set (note the # symbol on the lhs)
+  #{123 "foo" 0x7C}                                         ;set
+
+  (->> (range)
+       (take 5)
+       ;(take 32)
+       (map (juxt (comp keyword str) identity))
+       (into {})
+       type)
+
+  (array-map :1 1 :2 2)
+  (hash-map :1 1 :2 2)
+
 
   ;persistent data structures - immutability without copy-on-write
   ;https://pivovarit.github.io/talks/purely-functional-data-structures/img/clojure-trees.png
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -135,10 +184,11 @@
   ;We can show what the REPL sees after each of the above phases manually...
   ;Simple function vs the 'or' macro
   (->>
-    "(+ 1 2)"
+    "'(+ 1 2)"
     ;"(or 1 2)"
+    ;"'(1 2)"
 
-    ;read-string                                               ;In lisps, code is data
+    ;read-string                           ;In lisps, code is data
     ;macroexpand
     ;eval
     )
@@ -149,37 +199,44 @@
 
 
 
-
   ;Special forms
   ;=================================================================================================
-  (def foo 1)                                               ;creates and interns global vars
-  (let [foo 2] foo)                                         ;lexical symbol binding
-  (fn [arg1 arg2] (or arg1 arg2))                           ;general function form
+  (def foo 1)                              ;creates and interns global vars
+
+  (let [foo 2] foo)                        ;lexical symbol binding
+
+  (fn [arg1 arg2] (or arg1 arg2))          ;general function form
 
 
-  (if (= foo 1) "foo" "bar")                                ;if then else
-  (do (println foo) (println "bar"))                        ;usually for side effects
-  (loop [foo 2] foo)                                        ;like let, but with recur target capability
-  (recur)                                                   ;non-stack consuming recursion (tco) - compiler enforced
-  (quote (+ 1 2))                                           ;don't evaluate the form
-  (var foo)                                                 ;get the var of a symbol itself, not it's value
+  (if (= foo 1) "foo" "bar")               ;if thing then else
 
-  (throw (ex-info "pebkac" {:problematic-thing foo}))       ;throwing an exception
+  (do (println foo) (println "bar"))       ;usually for side effects
 
-  (try                                                      ;try/catch/finally are all 3 special forms
+  (loop [foo 2] foo)                       ;like let, but with recur target capability
+
+  (recur)                                  ;non-stack consuming recursion (tco) - compiler enforced
+
+  (quote (+ 1 2))                          ;don't evaluate the form
+
+  (var foo)                                ;get the var of a symbol itself, not it's value
+
+  ;throwing an exception
+  (throw (ex-info "pebkac" {:problematic-thing foo}))
+
+  (try                                     ;try/catch/finally are all 3 special forms
     foo
     (catch Exception e (println "foo not so good" e))
     (finally (println "glad we are moving past this...")))
 
   ;interop special forms: new and . ;eg:
-  (let [al (new ArrayList)]                                 ;new up java objects
-    (pp/pprint al)                                          ;first usage of a required namespace, more later
-    (.add al 1)                                             ;. form used to access java object methods
+  (let [al (new ArrayList)]                ;new up java objects
+    (pp/pprint al)                         ;first usage of a required namespace, more later
+    (.add al 1)                            ;. form used to access java object methods
     (pp/pprint al))
 
   ;other interop
-  (System/getProperty "java.runtime.version")               ;static method access
-  (Math/PI)                                                 ;static field access
+  (System/getProperty "java.runtime.version");static method access
+  (Math/PI)                                  ;static field access
 
 
 
@@ -209,8 +266,8 @@
   (plus-2 3)
   (plus-2 3 4)                                              ;!
 
-  ;(defn plus-2 [n & more]                                     ;variadic arguments
-  ;  (apply + (concat [n 2] more)))
+  (defn plus-2 [n & more]                                     ;variadic arguments
+    (apply + (concat [n 2] more)))
 
   (plus-2 3)
   (plus-2 3 4)
@@ -232,16 +289,18 @@
   ((adder))
   ((adder) 3)
 
+  ;TODO keywords as functions here
+
 
   ;destructuring - applies to function arguments and let bindings
-  (defn add-only-first-and-third [& [a _ b]]                ;destructuring the variadic args, position-wise
+  (defn add-only-first-and-third [& [a _ b]]      ;destructuring the variadic args, position-wise
     (+ a b))
 
   (add-only-first-and-third 1 2 4)
-  (add-only-first-and-third 1 2 4 10)                       ;destructuring doesn't break variadicity
+  (add-only-first-and-third 1 2 4 10)             ;destructuring doesn't break variadicity
 
-  (defn define-configs
-    [& {:keys [password] :as m}]                            ;destructuring variadic args into name-value pairs
+  ;destructuring variadic args into name-value pairs
+  (defn define-configs [& {:keys [password] :as m}]
     (println password)
     m)
 
@@ -615,9 +674,9 @@
     (add-thing [_ more] (str "nil " more)))
 
 
-  ;derive, prefer-method, remove-method, records, reify, proxy
+  ;TODO derive, prefer-method, remove-method, records, reify, proxy
 
-  (proxy)
+
 
   ;resources:
   ;=================================================================================================
@@ -636,7 +695,7 @@
   ;https://clojure.org/guides/spec
   ;https://clojure.org/about/spec
 
-  ;videos: some good talks by the creator of Clojure
+  ;videos: some good talks by Rich Hickey, the creator of Clojure
   ;Are we there yet?: https://www.youtube.com/watch?v=ScEPu1cs4l0
   ;Hammock Driven Development: https://www.youtube.com/watch?v=f84n5oFoZBc
   ;Simple made easy: https://www.youtube.com/watch?v=oytL881p-nQ
